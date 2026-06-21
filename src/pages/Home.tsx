@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, MouseEvent } from 'react';
+import { useState, useRef, MouseEvent } from 'react';
 import { motion, useInView } from 'framer-motion';
 
 interface Metric { value: string; label: string; }

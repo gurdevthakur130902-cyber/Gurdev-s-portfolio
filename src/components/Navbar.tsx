@@ -10,14 +10,37 @@ interface NavbarProps {
 
 export default function Navbar({ activePage, setActivePage, setCursorHovered, setContactOpen }: NavbarProps) {
   const [shrunk, setShrunk] = useState(false);
+  const [activeTab, setActiveTab] = useState<'home' | 'work' | 'about'>('home');
 
   useEffect(() => {
     const handleScroll = () => {
       setShrunk(window.scrollY > 40);
+
+      if (activePage === 'about') {
+        setActiveTab('about');
+        return;
+      }
+
+      const workEl = document.getElementById('work');
+      if (workEl) {
+        const rect = workEl.getBoundingClientRect();
+        // If the top of the work section is past 35% of the viewport height, highlight Work
+        const isWorkInView = rect.top <= window.innerHeight * 0.35;
+        if (isWorkInView) {
+          setActiveTab('work');
+        } else {
+          setActiveTab('home');
+        }
+      } else {
+        setActiveTab('home');
+      }
     };
+
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
+
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [activePage]);
 
   const handleMagneticMove = (e: MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {
     const el = e.currentTarget;
@@ -34,16 +57,19 @@ export default function Navbar({ activePage, setActivePage, setCursorHovered, se
   return (
     <div className="fixed top-6 left-0 w-full z-50 px-4 flex justify-center pointer-events-none">
       <motion.header
-        className={`nav-capsule rounded-2xl flex justify-between items-center w-full pointer-events-auto transition-colors duration-300 ${
+        className={`nav-capsule rounded-2xl flex justify-between items-center w-full pointer-events-auto transition-all duration-300 ${
           shrunk 
             ? 'py-2.5 px-5 max-w-2xl bg-white/90 border border-gray-200/50 shadow-md backdrop-blur-md' 
-            : 'py-4 px-8 max-w-3xl bg-white/75 border border-gray-100 backdrop-blur-sm shadow-sm'
+            : 'py-3.5 px-8 max-w-3xl bg-white/75 border border-gray-100 backdrop-blur-sm shadow-sm'
         }`}
         layout
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       >
         <button
-          onClick={() => setActivePage('home')}
+          onClick={() => {
+            setActivePage('home');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
           className="font-extrabold tracking-tight text-sm text-black flex items-center gap-2 logo-link outline-none"
           onMouseEnter={() => setCursorHovered(true)}
           onMouseLeave={() => setCursorHovered(false)}
@@ -56,18 +82,42 @@ export default function Navbar({ activePage, setActivePage, setCursorHovered, se
           <button
             onClick={() => {
               setActivePage('home');
-              setTimeout(() => {
-                document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' });
-              }, 100);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setActiveTab('home');
             }}
             className={`px-3 py-1.5 rounded-lg transition-colors relative outline-none ${
-              activePage === 'home' ? 'text-black font-extrabold' : 'hover:text-black'
+              activeTab === 'home' ? 'text-black font-extrabold' : 'hover:text-black'
             }`}
             onMouseMove={handleMagneticMove}
             onMouseLeave={handleMagneticLeave}
             onMouseEnter={() => setCursorHovered(true)}
           >
-            {activePage === 'home' && (
+            {activeTab === 'home' && (
+              <motion.span
+                layoutId="activeNavBackground"
+                className="absolute inset-0 bg-gray-100 rounded-lg -z-10"
+                transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+              />
+            )}
+            Home
+          </button>
+
+          <button
+            onClick={() => {
+              setActivePage('home');
+              setTimeout(() => {
+                document.getElementById('work')?.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+              setActiveTab('work');
+            }}
+            className={`px-3 py-1.5 rounded-lg transition-colors relative outline-none ${
+              activeTab === 'work' ? 'text-black font-extrabold' : 'hover:text-black'
+            }`}
+            onMouseMove={handleMagneticMove}
+            onMouseLeave={handleMagneticLeave}
+            onMouseEnter={() => setCursorHovered(true)}
+          >
+            {activeTab === 'work' && (
               <motion.span
                 layoutId="activeNavBackground"
                 className="absolute inset-0 bg-gray-100 rounded-lg -z-10"
@@ -78,15 +128,19 @@ export default function Navbar({ activePage, setActivePage, setCursorHovered, se
           </button>
 
           <button
-            onClick={() => setActivePage('about')}
+            onClick={() => {
+              setActivePage('about');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setActiveTab('about');
+            }}
             className={`px-3 py-1.5 rounded-lg transition-colors relative outline-none ${
-              activePage === 'about' ? 'text-black font-extrabold' : 'hover:text-black'
+              activeTab === 'about' ? 'text-black font-extrabold' : 'hover:text-black'
             }`}
             onMouseMove={handleMagneticMove}
             onMouseLeave={handleMagneticLeave}
             onMouseEnter={() => setCursorHovered(true)}
           >
-            {activePage === 'about' && (
+            {activeTab === 'about' && (
               <motion.span
                 layoutId="activeNavBackground"
                 className="absolute inset-0 bg-gray-100 rounded-lg -z-10"
@@ -118,11 +172,6 @@ export default function Navbar({ activePage, setActivePage, setCursorHovered, se
             Contact
           </button>
         </nav>
-
-        <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 bg-gray-50 border border-gray-100 rounded-full px-3 py-1">
-          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-          HR OPS
-        </div>
       </motion.header>
     </div>
   );
